@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Telegram Ad Rewards</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Ad Network Script -->
+    <script src="https://pl29690914.effectivecpmnetwork.com/69/2b/ca/692bca7e98dad47e54bb4f1e8c1a5205.js"></script>
+
+    <!-- Font & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--tg-theme-bg-color, #18222d);
+            color: var(--tg-theme-text-color, #ffffff);
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+        .surface { background-color: var(--tg-theme-secondary-bg-color, #242f3d); }
+        .text-muted { color: var(--tg-theme-hint-color, #889fb3); }
+        .primary-btn { 
+            background-color: var(--tg-theme-button-color, #2ea6ff); 
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+        .primary-text { color: var(--tg-theme-button-color, #2ea6ff); }
+        
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="min-h-screen selection:bg-blue-500 selection:text-white pb-20">
+
+    <header class="surface p-4 flex items-center justify-between border-b border-gray-800 shadow-sm">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-coins primary-text text-xl"></i>
+            <h1 class="font-bold text-lg">Ad Rewards</h1>
+        </div>
+        <button id="admin-toggle" class="text-xs px-3 py-1.5 rounded-full bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors border border-gray-700">
+            Admin
+        </button>
+    </header>
+
+    <main class="max-w-md mx-auto p-4">
+        
+        <!-- USER DASHBOARD -->
+        <div id="user-dashboard" class="space-y-6 fade-in">
+            <div class="surface rounded-2xl p-6 text-center shadow-lg relative overflow-hidden border border-gray-800">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                <p class="text-muted text-sm mb-1">Your Balance</p>
+                <div class="flex items-center justify-center gap-2 mb-4">
+                    <i class="fa-solid fa-coins text-yellow-400 text-3xl"></i>
+                    <h2 class="text-4xl font-black"><span id="user-balance">0</span> <span class="text-xl text-yellow-500/80">PTS</span></h2>
+                </div>
+                <p class="text-xs text-gray-400 mb-6 bg-gray-800/50 inline-block px-3 py-1 rounded-full" id="user-id-display">
+                    ID: Loading...
+                </p>
+
+                <!-- Normal Button -->
+                <button id="watch-ad-btn" class="w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-transform active:scale-95 primary-btn shadow-[0_4px_14px_0_rgba(46,166,255,0.39)]">
+                    <i class="fa-solid fa-play-circle text-xl"></i>
+                    Watch Ad & Earn
+                </button>
+
+                <!-- Loading State -->
+                <div id="watching-ad-state" class="hidden bg-gray-900 rounded-xl p-6 border border-gray-800">
+                    <div class="flex justify-center mb-3">
+                        <i class="fa-solid fa-spinner fa-spin primary-text text-3xl"></i>
+                    </div>
+                    <p class="font-medium text-lg">Watching Ad...</p>
+                    <p class="text-muted text-sm mt-1">Please wait <span id="ad-timer">5</span> seconds</p>
+                </div>
+            </div>
+
+            <div class="surface rounded-2xl p-5 border border-gray-800 shadow-sm">
+                <h3 class="font-semibold mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-users primary-text"></i>
+                    Referral System (50% Share)
+                </h3>
+                <p class="text-muted text-sm mb-4 leading-relaxed">
+                    Invite friends and earn 50% of the revenue generated from their ad views!
+                </p>
+                <div class="flex items-center gap-2 bg-gray-900 p-3 rounded-lg border border-gray-800">
+                    <code id="ref-link" class="primary-text text-xs flex-1 truncate">
+                        Loading link...
+                    </code>
+                    <button onclick="copyRefLink()" class="bg-gray-800 p-2 rounded text-gray-300 hover:text-white transition-colors text-sm">
+                        Copy
+                    </button>
+                </div>
+            </div>
+            
+            <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 text-sm text-blue-200 flex gap-3 items-start">
+                <i class="fa-solid fa-shield-check text-blue-400 shrink-0 mt-0.5"></i>
+                <p class="leading-relaxed">
+                    <strong>Revenue Share:</strong> 50% of all ad earnings are paid back to users via Points. 1000 Points = $1.00.
+                </p>
+            </div>
+        </div>
+
+        <!-- ADMIN DASHBOARD -->
+        <div id="admin-dashboard" class="space-y-6 fade-in hidden">
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line primary-text"></i>
+                    Admin Overview
+                </h2>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="surface rounded-xl p-4 border border-gray-800 shadow-sm">
+                    <p class="text-muted text-xs uppercase tracking-wider font-semibold mb-1">Total Users</p>
+                    <p class="text-2xl font-bold">1</p>
+                </div>
+                <div class="surface rounded-xl p-4 border border-gray-800 shadow-sm">
+                    <p class="text-muted text-xs uppercase tracking-wider font-semibold mb-1">Pts Dist.</p>
+                    <p class="text-2xl font-bold text-yellow-500" id="admin-total-pts">0</p>
+                </div>
+            </div>
+            
+            <div class="surface rounded-xl p-5 border border-gray-800 mt-6 shadow-sm">
+                <h3 class="font-semibold mb-4 border-b border-gray-800 pb-3">Ad Configuration</h3>
+                <p class="text-sm text-gray-400 mb-4">The ad script is currently hardcoded in the HTML head section for GitHub pages deployment.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Initialize Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Expand to full height
+        tg.ready();
+
+        // App State (Using LocalStorage for GitHub Pages static hosting)
+        let userId = 'demo_user';
+        let username = 'Demo User';
+        
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            userId = tg.initDataUnsafe.user.id.toString();
+            username = tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.first_name || 'User';
+        }
+
+        // Initialize user in local storage if not exists
+        let userData = JSON.parse(localStorage.getItem('adbot_user_' + userId)) || {
+            id: userId,
+            username: username,
+            balance: 0,
+            totalEarned: 0
+        };
+
+        // DOM Elements
+        const userDashboard = document.getElementById('user-dashboard');
+        const adminDashboard = document.getElementById('admin-dashboard');
+        const adminToggle = document.getElementById('admin-toggle');
+        
+        const balanceDisplay = document.getElementById('user-balance');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const refLinkDisplay = document.getElementById('ref-link');
+        
+        const watchAdBtn = document.getElementById('watch-ad-btn');
+        const watchingAdState = document.getElementById('watching-ad-state');
+        const adTimerDisplay = document.getElementById('ad-timer');
+        const adminTotalPts = document.getElementById('admin-total-pts');
+
+        // Initial Render
+        function updateUI() {
+            balanceDisplay.innerText = userData.balance;
+            userIdDisplay.innerText = 'ID: @' + userData.username;
+            refLinkDisplay.innerText = 'https://t.me/YourBotName?start=' + userData.id;
+            adminTotalPts.innerText = userData.totalEarned; // Mock admin stats
+        }
+        updateUI();
+
+        // Admin Toggle Logic
+        let isAdmin = false;
+        adminToggle.addEventListener('click', () => {
+            isAdmin = !isAdmin;
+            if (isAdmin) {
+                userDashboard.classList.add('hidden');
+                adminDashboard.classList.remove('hidden');
+                adminToggle.innerText = 'User View';
+            } else {
+                adminDashboard.classList.add('hidden');
+                userDashboard.classList.remove('hidden');
+                adminToggle.innerText = 'Admin';
+            }
+        });
+
+        // Watch Ad Logic
+        watchAdBtn.addEventListener('click', () => {
+            // Hide button, show loading
+            watchAdBtn.classList.add('hidden');
+            watchingAdState.classList.remove('hidden');
+            
+            let timeLeft = 5;
+            adTimerDisplay.innerText = timeLeft;
+
+            const interval = setInterval(() => {
+                timeLeft--;
+                adTimerDisplay.innerText = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    
+                    // Grant Reward
+                    userData.balance += 10;
+                    userData.totalEarned += 10;
+                    localStorage.setItem('adbot_user_' + userId, JSON.stringify(userData));
+                    
+                    updateUI();
+
+                    // Show button again
+                    watchingAdState.classList.add('hidden');
+                    watchAdBtn.classList.remove('hidden');
+                    
+                    // Show TG native popup
+                    tg.showAlert("You earned 10 points!");
+                }
+            }, 1000);
+        });
+
+        function copyRefLink() {
+            const link = refLinkDisplay.innerText;
+            navigator.clipboard.writeText(link).then(() => {
+                tg.showAlert("Referral link copied!");
+            });
+        }
+    </script>
+</body>
+</html>
+
